@@ -3,496 +3,865 @@
  <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Finx</title>
+  <title>Vault Breaker</title>
   <script src="https://cdn.tailwindcss.com/3.4.17"></script>
   <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
   <script src="/_sdk/element_sdk.js"></script>
   <script src="/_sdk/data_sdk.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=DM+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&amp;family=Rajdhani:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; font-family: 'DM Sans', sans-serif; }
+    html, body { height: 100%; overflow: hidden; }
 
-    .finx-gradient { background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #16213e 100%); }
-    .card-glass { background: rgba(255,255,255,0.06); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.08); }
-    .card-glass:hover { background: rgba(255,255,255,0.08); }
-    .btn-primary { background: linear-gradient(135deg, #e94560, #c23152); transition: all 0.2s; }
-    .btn-primary:hover { background: linear-gradient(135deg, #ff6b81, #e94560); transform: translateY(-1px); box-shadow: 0 8px 25px rgba(233,69,96,0.3); }
-    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    :root {
+      --bg: #0a0e1a;
+      --surface: #141a2e;
+      --text: #e0e6f0;
+      --primary: #00e5ff;
+      --secondary: #7c4dff;
+    }
 
-    .post-image { width: 100%; max-height: 500px; object-fit: cover; border-radius: 12px; }
+    body {
+      font-family: 'Rajdhani', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
 
-    .like-btn { transition: all 0.2s; }
-    .like-btn:hover { transform: scale(1.15); }
-    .like-btn.liked svg { fill: #e94560; stroke: #e94560; }
+    .vault-scene {
+      perspective: 800px;
+    }
 
-    .fade-in { animation: fadeIn 0.4s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .vault-door {
+      width: 220px;
+      height: 220px;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
 
-    .slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
-    @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+    .vault-door.opening {
+      transform: rotateY(-120deg) scale(0.9);
+    }
 
-    .pulse-dot { animation: pulse 2s infinite; }
-    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    .vault-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backface-visibility: hidden;
+    }
 
-    .avatar-ring { background: linear-gradient(135deg, #e94560, #c23152, #ff6b81); padding: 2px; border-radius: 50%; }
+    .vault-front {
+      background: linear-gradient(145deg, #1e2744, #0f1525);
+      border: 3px solid #2a3558;
+      box-shadow:
+        0 0 30px rgba(0, 229, 255, 0.15),
+        inset 0 0 30px rgba(0, 0, 0, 0.5),
+        0 20px 60px rgba(0, 0, 0, 0.6);
+    }
 
-    input[type="file"] { display: none; }
+    .vault-handle {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      border: 4px solid var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: all 0.6s ease;
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.3);
+    }
 
-    .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; }
-    .toast { background: rgba(233,69,96,0.95); color: white; padding: 10px 20px; border-radius: 12px; font-size: 14px; animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 2.5s forwards; pointer-events: auto; }
-    @keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+    .vault-handle::after {
+      content: '';
+      position: absolute;
+      width: 30px;
+      height: 6px;
+      background: var(--primary);
+      border-radius: 3px;
+      transition: transform 0.6s ease;
+    }
 
-    .empty-state svg { stroke: rgba(255,255,255,0.15); }
+    .vault-door.opening .vault-handle::after {
+      transform: rotate(90deg);
+    }
 
-    .modal-overlay { background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); }
+    .digit-slot {
+      width: 52px;
+      height: 64px;
+      background: linear-gradient(180deg, #0a0e1a, #141a2e);
+      border: 2px solid #2a3558;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', monospace;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--primary);
+      text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
 
-    .confirm-card { background: #1a1a2e; border: 1px solid rgba(255,255,255,0.1); }
+    .digit-slot.active {
+      border-color: var(--primary);
+      box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+    }
 
-    .spinner { border: 3px solid rgba(255,255,255,0.1); border-top: 3px solid #e94560; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; display: inline-block; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    .digit-slot.correct {
+      border-color: #00e676;
+      color: #00e676;
+      text-shadow: 0 0 10px rgba(0, 230, 118, 0.6);
+      animation: correctPulse 0.5s ease;
+    }
 
-    .limit-banner { background: rgba(233,69,96,0.15); border: 1px solid rgba(233,69,96,0.3); }
+    .digit-slot.wrong {
+      border-color: #ff1744;
+      color: #ff1744;
+      text-shadow: 0 0 10px rgba(255, 23, 68, 0.6);
+      animation: shake 0.5s ease;
+    }
 
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+    .digit-slot.hint-pos {
+      border-color: #ffab00;
+      color: #ffab00;
+      text-shadow: 0 0 10px rgba(255, 171, 0, 0.6);
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-6px); }
+      80% { transform: translateX(6px); }
+    }
+
+    @keyframes correctPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .num-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #1e2744, #141a2e);
+      border: 2px solid #2a3558;
+      color: var(--text);
+      font-family: 'Orbitron', monospace;
+      font-size: 18px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .num-btn:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(0, 229, 255, 0.2);
+    }
+
+    .num-btn:active {
+      transform: translateY(0) scale(0.95);
+    }
+
+    .level-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #1e2744;
+      border: 1px solid #2a3558;
+      transition: all 0.3s ease;
+    }
+
+    .level-dot.completed {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 6px rgba(0, 229, 255, 0.5);
+    }
+
+    .level-dot.current {
+      background: var(--secondary);
+      border-color: var(--secondary);
+      box-shadow: 0 0 8px rgba(124, 77, 255, 0.6);
+      animation: dotPulse 1.5s infinite;
+    }
+
+    @keyframes dotPulse {
+      0%, 100% { box-shadow: 0 0 6px rgba(124, 77, 255, 0.4); }
+      50% { box-shadow: 0 0 14px rgba(124, 77, 255, 0.8); }
+    }
+
+    .hint-box {
+      background: linear-gradient(145deg, #1a2040, #0f1525);
+      border: 1px solid #2a3558;
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 14px;
+      line-height: 1.5;
+      max-width: 340px;
+    }
+
+    .success-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease;
+    }
+
+    .success-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .success-card {
+      background: linear-gradient(145deg, #1a2040, #0f1525);
+      border: 2px solid var(--primary);
+      border-radius: 20px;
+      padding: 32px;
+      text-align: center;
+      transform: scale(0.8) translateY(20px);
+      transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+      box-shadow: 0 0 60px rgba(0, 229, 255, 0.2);
+    }
+
+    .success-overlay.show .success-card {
+      transform: scale(1) translateY(0);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    .floating { animation: float 3s ease-in-out infinite; }
+
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+      50% { opacity: 1; transform: scale(1) rotate(180deg); }
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      background: var(--primary);
+      border-radius: 50%;
+      animation: sparkle 2s ease-in-out infinite;
+    }
+
+    .progress-ring {
+      transform: rotate(-90deg);
+    }
+
+    .progress-ring-circle {
+      transition: stroke-dashoffset 0.8s ease;
+    }
+
+    .screen-transition {
+      animation: fadeSlideIn 0.4s ease forwards;
+    }
+
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes glowPulse {
+      0%, 100% { box-shadow: 0 0 20px rgba(0, 229, 255, 0.1); }
+      50% { box-shadow: 0 0 40px rgba(0, 229, 255, 0.3); }
+    }
+
+    .glow-pulse { animation: glowPulse 3s ease-in-out infinite; }
+
+    .scroll-wrap {
+      overflow-y: auto;
+      height: 100%;
+      scrollbar-width: thin;
+      scrollbar-color: #2a3558 transparent;
+    }
+
+    .scroll-wrap::-webkit-scrollbar { width: 4px; }
+    .scroll-wrap::-webkit-scrollbar-track { background: transparent; }
+    .scroll-wrap::-webkit-scrollbar-thumb { background: #2a3558; border-radius: 2px; }
+
+    .final-vault {
+      width: 200px; height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #1a2040, #0a0e1a);
+      border: 4px solid var(--primary);
+      display: flex; align-items: center; justify-content: center;
+      position: relative;
+      box-shadow: 0 0 60px rgba(0, 229, 255, 0.3), inset 0 0 40px rgba(0, 229, 255, 0.1);
+    }
+
+    @keyframes revealGold {
+      0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+
+    .gold-reveal { animation: revealGold 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+    .toast-msg {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(80px);
+      background: #1a2040;
+      border: 1px solid #ff1744;
+      color: #ff8a80;
+      padding: 10px 20px;
+      border-radius: 10px;
+      font-size: 14px;
+      z-index: 100;
+      transition: transform 0.3s ease;
+      pointer-events: none;
+    }
+    .toast-msg.show { transform: translateX(-50%) translateY(0); }
   </style>
   <style>body { box-sizing: border-box; }</style>
  </head>
  <body class="h-full">
-  <div id="app" class="h-full finx-gradient text-white overflow-auto"><!-- Toast Container -->
-   <div id="toast-container" class="toast-container"></div><!-- Delete Confirm Modal -->
-   <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center modal-overlay hidden">
-    <div class="confirm-card rounded-2xl p-6 mx-4 max-w-sm w-full slide-up">
-     <div class="flex items-center gap-3 mb-3">
-      <div class="w-10 h-10 rounded-full bg-red-500/20 flex items-center justify-center"><i data-lucide="trash-2" style="width:20px;height:20px;color:#e94560;"></i>
-      </div>
-      <h3 class="text-lg font-semibold" style="font-family:'Outfit',sans-serif;">Deletar post?</h3>
-     </div>
-     <p class="text-sm text-gray-400 mb-5">Essa ação não pode ser desfeita.</p>
-     <div class="flex gap-3"><button id="cancel-delete-btn" class="flex-1 py-2.5 rounded-xl bg-white/10 text-sm font-medium hover:bg-white/15 transition">Cancelar</button> <button id="confirm-delete-btn" class="flex-1 py-2.5 rounded-xl bg-red-500 text-sm font-medium hover:bg-red-600 transition">Deletar</button>
-     </div>
-    </div>
-   </div><!-- Header -->
-   <header class="sticky top-0 z-40 px-4 py-3 flex items-center justify-between" style="background:rgba(10,10,10,0.85);backdrop-filter:blur(20px);border-bottom:1px solid rgba(255,255,255,0.06);">
-    <div class="flex items-center gap-2">
-     <div class="w-8 h-8 rounded-lg btn-primary flex items-center justify-center"><i data-lucide="flame" style="width:18px;height:18px;"></i>
-     </div>
-     <h1 id="header-title" class="text-xl font-bold tracking-tight" style="font-family:'Outfit',sans-serif;">Finx</h1>
-     <div class="w-1.5 h-1.5 rounded-full bg-green-400 pulse-dot ml-1"></div>
-    </div>
-    <div class="flex items-center gap-3"><button class="w-9 h-9 rounded-full bg-white/8 flex items-center justify-center hover:bg-white/12 transition"> <i data-lucide="bell" style="width:18px;height:18px;color:rgba(255,255,255,0.6);"></i> </button>
-     <div class="avatar-ring">
-      <div class="w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center text-xs font-bold">
-       VC
+  <div id="app" class="h-full w-full scroll-wrap" style="background: var(--bg);"><!-- START SCREEN -->
+   <div id="startScreen" class="h-full flex flex-col items-center justify-center p-6 screen-transition">
+    <div class="vault-scene mb-6">
+     <div class="vault-door floating">
+      <div class="vault-face vault-front">
+       <div class="vault-handle glow-pulse">
+        <div></div>
+       </div>
+       <div class="sparkle" style="top:15%;left:20%;animation-delay:0s;"></div>
+       <div class="sparkle" style="top:25%;right:15%;animation-delay:0.7s;"></div>
+       <div class="sparkle" style="bottom:20%;left:25%;animation-delay:1.4s;"></div>
       </div>
      </div>
     </div>
-   </header><!-- Create Post Section -->
-   <div class="px-4 pt-4 pb-2">
-    <div class="card-glass rounded-2xl p-4">
-     <div class="flex items-center gap-3 mb-3">
-      <div class="avatar-ring">
-       <div class="w-10 h-10 rounded-full bg-gray-800 flex items-center justify-center text-sm font-bold">
-        VC
+    <h1 id="titleEl" class="text-3xl font-black mb-1 tracking-wider" style="font-family:'Orbitron',monospace;color:var(--primary);text-shadow:0 0 20px rgba(0,229,255,0.4);">VAULT BREAKER</h1>
+    <p id="subtitleEl" class="text-base mb-8 opacity-70" style="font-family:'Rajdhani',sans-serif;">Crack the Code · 25 Fases</p>
+    <div id="startBtns" class="flex flex-col gap-3 w-full max-w-xs"></div>
+   </div><!-- GAME SCREEN -->
+   <div id="gameScreen" class="h-full flex flex-col p-4 hidden">
+    <div class="flex items-center justify-between mb-2"><button id="backBtn" class="p-2 rounded-lg hover:bg-white/5 transition-colors"> <i data-lucide="arrow-left" style="width:20px;height:20px;color:var(--text);"></i> </button>
+     <div class="text-center"><span id="levelLabel" class="text-xs uppercase tracking-widest opacity-50" style="font-family:'Orbitron',monospace;">Fase</span> <span id="levelNum" class="text-lg font-bold ml-1" style="font-family:'Orbitron',monospace;color:var(--primary);">1</span> <span class="text-xs opacity-30 ml-1" style="font-family:'Orbitron',monospace;">/ 25</span>
+     </div>
+     <div class="flex items-center gap-1"><i data-lucide="zap" style="width:14px;height:14px;color:#ffab00;"></i> <span id="attemptsEl" class="text-sm font-semibold" style="font-family:'Orbitron',monospace;">0</span>
+     </div>
+    </div><!-- Level dots -->
+    <div id="levelDots" class="flex flex-wrap justify-center gap-1 mb-3 px-2"></div><!-- Mini vault -->
+    <div class="flex justify-center mb-3">
+     <div class="vault-scene">
+      <div id="miniVault" class="vault-door" style="width:120px;height:120px;">
+       <div class="vault-face vault-front" style="border-radius:14px;border-width:2px;">
+        <div class="vault-handle" style="width:40px;height:40px;border-width:2px;">
+         <div style="width:16px;height:3px;"></div>
+        </div>
        </div>
       </div>
-      <div class="flex-1">
-       <p class="text-sm font-semibold">Você</p>
-       <p id="welcome-text" class="text-xs text-gray-400">O que está rolando?</p>
+     </div>
+    </div><!-- Code slots -->
+    <div id="codeSlots" class="flex justify-center gap-2 mb-3"></div><!-- Hint area -->
+    <div id="hintArea" class="flex justify-center mb-3">
+     <div class="hint-box text-center">
+      <div class="flex items-center justify-center gap-1 mb-1 opacity-60"><i data-lucide="lightbulb" style="width:14px;height:14px;color:#ffab00;"></i> <span class="text-xs uppercase tracking-wider">Dica</span>
       </div>
-     </div><textarea id="caption-input" class="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-500 resize-none focus:outline-none focus:border-pink-500/50 transition" rows="2" placeholder="Escreva uma legenda..."></textarea> <!-- Image Preview -->
-     <div id="image-preview-container" class="hidden mt-3 relative"><img id="image-preview" class="post-image" alt="Preview da foto" loading="lazy"> <button id="remove-image-btn" class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 flex items-center justify-center hover:bg-black/80 transition"> <i data-lucide="x" style="width:16px;height:16px;"></i> </button>
+      <p id="hintText" class="text-sm" style="color:var(--text);"></p>
      </div>
-     <div class="flex items-center justify-between mt-3">
-      <div class="flex gap-2"><label for="photo-input" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition cursor-pointer text-sm text-gray-300"> <i data-lucide="image" style="width:16px;height:16px;color:#e94560;"></i> Foto </label> <input type="file" id="photo-input" accept="image/*"> <label for="camera-input" class="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 transition cursor-pointer text-sm text-gray-300"> <i data-lucide="camera" style="width:16px;height:16px;color:#e94560;"></i> Câmera </label> <input type="file" id="camera-input" accept="image/*" capture="environment">
-      </div><button id="post-btn" class="btn-primary px-5 py-2 rounded-xl text-sm font-semibold flex items-center gap-2" disabled> <span id="post-btn-text">Postar</span> <span id="post-spinner" class="spinner hidden"></span> </button>
+    </div><!-- Feedback area -->
+    <div id="feedbackArea" class="text-center text-xs mb-2 h-5" style="font-family:'Rajdhani',sans-serif;"></div><!-- Number pad -->
+    <div class="flex justify-center mb-2">
+     <div class="grid grid-cols-5 gap-2" id="numPad"></div>
+    </div><!-- Action buttons -->
+    <div class="flex justify-center gap-3 mt-1"><button id="clearBtn" class="px-4 py-2 rounded-xl text-sm font-semibold transition-all" style="background:linear-gradient(145deg,#1e2744,#141a2e);border:2px solid #2a3558;color:var(--text);font-family:'Rajdhani',sans-serif;"> Limpar </button> <button id="submitBtn" class="px-6 py-2 rounded-xl text-sm font-bold transition-all" style="background:linear-gradient(145deg,var(--primary),#00b8d4);border:none;color:#0a0e1a;font-family:'Orbitron',monospace;"> Tentar </button>
+    </div><!-- Legend -->
+    <div class="flex justify-center gap-4 mt-3 text-xs opacity-50"><span><span style="color:#00e676;">●</span> Certo</span> <span><span style="color:#ffab00;">●</span> Posição errada</span> <span><span style="color:#ff1744;">●</span> Errado</span>
+    </div>
+   </div><!-- SUCCESS OVERLAY -->
+   <div id="successOverlay" class="success-overlay">
+    <div class="success-card" style="min-width:280px;max-width:340px;">
+     <div id="successIcon" class="text-5xl mb-3">
+      🔓
      </div>
+     <h2 id="successTitle" class="text-xl font-bold mb-1" style="font-family:'Orbitron',monospace;color:var(--primary);">Cofre Aberto!</h2>
+     <p id="successMsg" class="text-sm opacity-70 mb-4"></p><button id="nextLevelBtn" class="px-6 py-2 rounded-xl text-sm font-bold transition-all" style="background:linear-gradient(145deg,var(--primary),#00b8d4);border:none;color:#0a0e1a;font-family:'Orbitron',monospace;cursor:pointer;"> Próxima Fase → </button>
     </div>
-   </div><!-- Limit Banner -->
-   <div id="limit-banner" class="mx-4 mt-2 limit-banner rounded-xl p-3 text-sm text-center hidden">
-    ⚠️ Limite de 999 posts atingido. Delete alguns para continuar postando.
-   </div><!-- Feed -->
-   <div class="px-4 pt-2 pb-6">
-    <div class="flex items-center justify-between mb-3">
-     <h2 class="text-sm font-semibold text-gray-400 uppercase tracking-wider" style="font-family:'Outfit',sans-serif;">Feed</h2>
-     <div id="post-count" class="text-xs text-gray-500"></div>
-    </div>
-    <div id="feed-container" class="space-y-4"><!-- Posts render here -->
-    </div>
-    <div id="empty-state" class="hidden text-center py-16">
-     <div class="empty-state flex justify-center mb-4"><i data-lucide="image-plus" style="width:64px;height:64px;"></i>
+   </div><!-- FINAL WIN OVERLAY -->
+   <div id="finalOverlay" class="success-overlay">
+    <div class="success-card" style="min-width:300px;max-width:380px;">
+     <div class="flex justify-center mb-4">
+      <div class="final-vault"><span class="text-6xl gold-reveal">💰</span>
+      </div>
      </div>
-     <p class="text-gray-400 text-lg font-medium" style="font-family:'Outfit',sans-serif;">Nenhum post ainda</p>
-     <p class="text-gray-500 text-sm mt-1">Compartilhe sua primeira foto!</p>
+     <h2 class="text-2xl font-black mb-2" style="font-family:'Orbitron',monospace;color:var(--primary);">MESTRE DOS COFRES!</h2>
+     <p class="text-sm opacity-70 mb-2">Você completou todas as 25 fases!</p>
+     <p id="finalStats" class="text-xs opacity-50 mb-4"></p><button id="replayBtn" class="px-6 py-2 rounded-xl text-sm font-bold transition-all" style="background:linear-gradient(145deg,var(--secondary),#651fff);border:none;color:white;font-family:'Orbitron',monospace;cursor:pointer;"> Jogar Novamente 🔄 </button>
     </div>
-   </div>
+   </div><!-- Toast -->
+   <div id="toast" class="toast-msg"></div>
   </div>
   <script>
-    // ---- State ----
-    let allPosts = [];
-    let currentImageData = null;
-    let pendingDeleteRecord = null;
+    // ===== GAME DATA =====
+    const LEVELS = [
+      { code: "12", hint: "Os dois primeiros números naturais depois do zero.", digits: 2 },
+      { code: "73", hint: "Soma = 10. O primeiro é ímpar e maior que 5.", digits: 2 },
+      { code: "48", hint: "Dois múltiplos de 4 em ordem crescente.", digits: 2 },
+      { code: "159", hint: "Contando de 1 em 1, pulando os pares.", digits: 3 },
+      { code: "246", hint: "Os três primeiros números pares positivos.", digits: 3 },
+      { code: "321", hint: "Contagem regressiva a partir de 3.", digits: 3 },
+      { code: "808", hint: "Um palíndromo com zero no meio.", digits: 3 },
+      { code: "555", hint: "Todos os dígitos são iguais. Pense no número da sorte.", digits: 3 },
+      { code: "1234", hint: "A sequência mais simples de 4 dígitos.", digits: 4 },
+      { code: "7531", hint: "Ímpares decrescentes começando por 7.", digits: 4 },
+      { code: "9090", hint: "Alterna entre 9 e 0.", digits: 4 },
+      { code: "2468", hint: "Pares crescentes de 2 em 2.", digits: 4 },
+      { code: "1001", hint: "Palíndromo de 4 dígitos. Começa e termina com 1.", digits: 4 },
+      { code: "3692", hint: "Tabuada do 3: posições 1,2,3... depois o 2.", digits: 4 },
+      { code: "8642", hint: "Pares decrescentes a partir de 8.", digits: 4 },
+      { code: "1357", hint: "Ímpares crescentes começando do 1.", digits: 4 },
+      { code: "50505", hint: "Alterna 5 e 0, começa e termina em 5.", digits: 5 },
+      { code: "11235", hint: "Fibonacci: cada número é a soma dos dois anteriores.", digits: 5 },
+      { code: "97531", hint: "Todos os ímpares de 9 até 1.", digits: 5 },
+      { code: "31415", hint: "Os 5 primeiros dígitos de π (pi).", digits: 5 },
+      { code: "86420", hint: "Pares decrescentes até o zero.", digits: 5 },
+      { code: "12321", hint: "Sobe até 3 e desce. Um espelho numérico.", digits: 5 },
+      { code: "77777", hint: "O número da sorte máxima! Todos iguais.", digits: 5 },
+      { code: "24680", hint: "Pares em ordem, terminando em zero.", digits: 5 },
+      { code: "99999", hint: "O cofre final. O maior dígito, repetido 5 vezes.", digits: 5 }
+    ];
 
-    // ---- Default Config ----
+    // ===== STATE =====
+    let currentLevel = 0;
+    let currentInput = [];
+    let attempts = 0;
+    let totalAttempts = 0;
+    let completedSet = new Set();
+    let saveRecord = null;
+    let allData = [];
+
+    // ===== ELEMENT SDK =====
     const defaultConfig = {
-      app_title: 'Finx',
-      welcome_text: 'O que está rolando?',
-      background_color: '#0a0a0a',
-      surface_color: '#1a1a2e',
-      text_color: '#ffffff',
-      primary_action_color: '#e94560',
-      secondary_action_color: '#ff6b81',
-      font_family: 'Outfit',
+      game_title: "VAULT BREAKER",
+      subtitle_text: "Crack the Code · 25 Fases",
+      background_color: "#0a0e1a",
+      surface_color: "#141a2e",
+      text_color: "#e0e6f0",
+      primary_color: "#00e5ff",
+      secondary_color: "#7c4dff",
+      font_family: "Rajdhani",
       font_size: 16
     };
 
-    // ---- Element SDK Init ----
+    function applyConfig(config) {
+      const bg = config.background_color || defaultConfig.background_color;
+      const sf = config.surface_color || defaultConfig.surface_color;
+      const tx = config.text_color || defaultConfig.text_color;
+      const pr = config.primary_color || defaultConfig.primary_color;
+      const sc = config.secondary_color || defaultConfig.secondary_color;
+      const ff = config.font_family || defaultConfig.font_family;
+      const fs = config.font_size || defaultConfig.font_size;
+
+      document.documentElement.style.setProperty('--bg', bg);
+      document.documentElement.style.setProperty('--surface', sf);
+      document.documentElement.style.setProperty('--text', tx);
+      document.documentElement.style.setProperty('--primary', pr);
+      document.documentElement.style.setProperty('--secondary', sc);
+
+      document.getElementById('app').style.background = bg;
+      document.body.style.color = tx;
+      document.body.style.fontFamily = `${ff}, Rajdhani, sans-serif`;
+      document.body.style.fontSize = `${fs}px`;
+
+      const titleEl = document.getElementById('titleEl');
+      const subtitleEl = document.getElementById('subtitleEl');
+      if (titleEl) {
+        titleEl.textContent = config.game_title || defaultConfig.game_title;
+        titleEl.style.color = pr;
+        titleEl.style.fontSize = `${fs * 1.9}px`;
+      }
+      if (subtitleEl) {
+        subtitleEl.textContent = config.subtitle_text || defaultConfig.subtitle_text;
+        subtitleEl.style.fontSize = `${fs}px`;
+      }
+
+      document.querySelectorAll('.vault-handle').forEach(h => {
+        h.style.borderColor = pr;
+        h.style.boxShadow = `0 0 20px ${pr}33`;
+      });
+      document.querySelectorAll('.vault-handle::after, .vault-handle div').forEach(d => {
+        d.style.background = pr;
+      });
+
+      document.querySelectorAll('.level-dot.completed').forEach(d => {
+        d.style.background = pr;
+        d.style.borderColor = pr;
+      });
+      document.querySelectorAll('.level-dot.current').forEach(d => {
+        d.style.background = sc;
+        d.style.borderColor = sc;
+      });
+    }
+
     window.elementSdk.init({
       defaultConfig,
-      onConfigChange: async (config) => {
-        const c = key => config[key] || defaultConfig[key];
-
-        document.getElementById('header-title').textContent = c('app_title');
-        document.getElementById('welcome-text').textContent = c('welcome_text');
-
-        const font = c('font_family');
-        const baseSize = c('font_size');
-        const baseFontStack = `${font}, 'DM Sans', sans-serif`;
-
-        document.getElementById('header-title').style.fontFamily = baseFontStack;
-        document.getElementById('header-title').style.fontSize = `${baseSize * 1.3}px`;
-
-        const bg = c('background_color');
-        const appEl = document.getElementById('app');
-        appEl.style.background = `linear-gradient(135deg, ${bg} 0%, ${c('surface_color')} 50%, ${adjustColor(bg, 20)} 100%)`;
-        appEl.style.color = c('text_color');
-
-        document.querySelectorAll('.btn-primary').forEach(el => {
-          el.style.background = `linear-gradient(135deg, ${c('primary_action_color')}, ${c('secondary_action_color')})`;
-        });
-        document.querySelectorAll('.avatar-ring').forEach(el => {
-          el.style.background = `linear-gradient(135deg, ${c('primary_action_color')}, ${c('secondary_action_color')})`;
-        });
-      },
-      mapToCapabilities: (config) => {
-        const c = key => config[key] || defaultConfig[key];
-        const make = (key) => ({
-          get: () => c(key),
-          set: (v) => { config[key] = v; window.elementSdk.setConfig({ [key]: v }); }
-        });
-        return {
-          recolorables: [
-            make('background_color'),
-            make('surface_color'),
-            make('text_color'),
-            make('primary_action_color'),
-            make('secondary_action_color')
-          ],
-          borderables: [],
-          fontEditable: make('font_family'),
-          fontSizeable: make('font_size')
-        };
-      },
+      onConfigChange: async (config) => { applyConfig(config); },
+      mapToCapabilities: (config) => ({
+        recolorables: [
+          { get: () => config.background_color || defaultConfig.background_color, set: (v) => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+          { get: () => config.surface_color || defaultConfig.surface_color, set: (v) => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+          { get: () => config.text_color || defaultConfig.text_color, set: (v) => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+          { get: () => config.primary_color || defaultConfig.primary_color, set: (v) => { config.primary_color = v; window.elementSdk.setConfig({ primary_color: v }); } },
+          { get: () => config.secondary_color || defaultConfig.secondary_color, set: (v) => { config.secondary_color = v; window.elementSdk.setConfig({ secondary_color: v }); } }
+        ],
+        borderables: [],
+        fontEditable: {
+          get: () => config.font_family || defaultConfig.font_family,
+          set: (v) => { config.font_family = v; window.elementSdk.setConfig({ font_family: v }); }
+        },
+        fontSizeable: {
+          get: () => config.font_size || defaultConfig.font_size,
+          set: (v) => { config.font_size = v; window.elementSdk.setConfig({ font_size: v }); }
+        }
+      }),
       mapToEditPanelValues: (config) => new Map([
-        ['app_title', config.app_title || defaultConfig.app_title],
-        ['welcome_text', config.welcome_text || defaultConfig.welcome_text]
+        ["game_title", config.game_title || defaultConfig.game_title],
+        ["subtitle_text", config.subtitle_text || defaultConfig.subtitle_text]
       ])
     });
 
-    function adjustColor(hex, amount) {
-      hex = hex.replace('#', '');
-      let r = Math.min(255, parseInt(hex.substring(0,2), 16) + amount);
-      let g = Math.min(255, parseInt(hex.substring(2,4), 16) + amount);
-      let b = Math.min(255, parseInt(hex.substring(4,6), 16) + amount);
-      return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
-    }
-
-    // ---- Toast ----
-    function showToast(msg) {
-      const container = document.getElementById('toast-container');
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.textContent = msg;
-      container.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
-    }
-
-    // ---- Image Handling ----
-    function handleImageSelect(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (file.size > 5 * 1024 * 1024) {
-        showToast('Imagem muito grande (máx 5MB)');
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        currentImageData = ev.target.result;
-        const preview = document.getElementById('image-preview');
-        preview.src = currentImageData;
-        document.getElementById('image-preview-container').classList.remove('hidden');
-        updatePostBtn();
-      };
-      reader.readAsDataURL(file);
-    }
-
-    document.getElementById('photo-input').addEventListener('change', handleImageSelect);
-    document.getElementById('camera-input').addEventListener('change', handleImageSelect);
-
-    document.getElementById('remove-image-btn').addEventListener('click', () => {
-      currentImageData = null;
-      document.getElementById('image-preview-container').classList.add('hidden');
-      document.getElementById('photo-input').value = '';
-      document.getElementById('camera-input').value = '';
-      updatePostBtn();
-    });
-
-    // ---- Post Button State ----
-    const captionInput = document.getElementById('caption-input');
-    const postBtn = document.getElementById('post-btn');
-
-    function updatePostBtn() {
-      postBtn.disabled = !currentImageData && !captionInput.value.trim();
-    }
-    captionInput.addEventListener('input', updatePostBtn);
-
-    // ---- Create Post ----
-    postBtn.addEventListener('click', async () => {
-      if (allPosts.length >= 999) {
-        document.getElementById('limit-banner').classList.remove('hidden');
-        return;
-      }
-
-      const caption = captionInput.value.trim();
-      if (!caption && !currentImageData) return;
-
-      postBtn.disabled = true;
-      document.getElementById('post-btn-text').textContent = 'Postando...';
-      document.getElementById('post-spinner').classList.remove('hidden');
-
-      const newPost = {
-        username: 'Você',
-        caption: caption,
-        image_url: currentImageData || '',
-        likes: 0,
-        liked: false,
-        created_at: new Date().toISOString()
-      };
-
-      const result = await window.dataSdk.create(newPost);
-
-      document.getElementById('post-btn-text').textContent = 'Postar';
-      document.getElementById('post-spinner').classList.add('hidden');
-
-      if (result.isOk) {
-        captionInput.value = '';
-        currentImageData = null;
-        document.getElementById('image-preview-container').classList.add('hidden');
-        document.getElementById('photo-input').value = '';
-        document.getElementById('camera-input').value = '';
-        showToast('Post publicado! 🔥');
-      } else {
-        showToast('Erro ao publicar. Tente novamente.');
-      }
-      updatePostBtn();
-    });
-
-    // ---- Delete Modal ----
-    document.getElementById('cancel-delete-btn').addEventListener('click', () => {
-      pendingDeleteRecord = null;
-      document.getElementById('delete-modal').classList.add('hidden');
-    });
-
-    document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
-      if (!pendingDeleteRecord) return;
-      const btn = document.getElementById('confirm-delete-btn');
-      btn.textContent = 'Deletando...';
-      btn.disabled = true;
-
-      const result = await window.dataSdk.delete(pendingDeleteRecord);
-
-      btn.textContent = 'Deletar';
-      btn.disabled = false;
-      document.getElementById('delete-modal').classList.add('hidden');
-
-      if (result.isOk) {
-        showToast('Post deletado');
-      } else {
-        showToast('Erro ao deletar');
-      }
-      pendingDeleteRecord = null;
-    });
-
-    // ---- Like Toggle ----
-    async function toggleLike(record) {
-      const updated = { ...record, liked: !record.liked, likes: record.liked ? Math.max(0, record.likes - 1) : record.likes + 1 };
-      // Optimistic UI
-      const likeBtn = document.querySelector(`[data-post-id="${record.__backendId}"] .like-btn`);
-      if (likeBtn) {
-        likeBtn.classList.toggle('liked', updated.liked);
-        const countEl = likeBtn.querySelector('.like-count');
-        if (countEl) countEl.textContent = updated.likes;
-      }
-      await window.dataSdk.update(updated);
-    }
-
-    // ---- Time Formatting ----
-    function timeAgo(isoStr) {
-      const diff = Date.now() - new Date(isoStr).getTime();
-      const mins = Math.floor(diff / 60000);
-      if (mins < 1) return 'agora';
-      if (mins < 60) return `${mins}min`;
-      const hrs = Math.floor(mins / 60);
-      if (hrs < 24) return `${hrs}h`;
-      const days = Math.floor(hrs / 24);
-      return `${days}d`;
-    }
-
-    // ---- Render Feed ----
-    function renderFeed(posts) {
-      const container = document.getElementById('feed-container');
-      const emptyState = document.getElementById('empty-state');
-      const postCount = document.getElementById('post-count');
-
-      if (posts.length === 0) {
-        container.innerHTML = '';
-        emptyState.classList.remove('hidden');
-        postCount.textContent = '';
-        return;
-      }
-
-      emptyState.classList.add('hidden');
-      postCount.textContent = `${posts.length} post${posts.length > 1 ? 's' : ''}`;
-
-      // Sort newest first
-      const sorted = [...posts].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-
-      const existingIds = new Map();
-      [...container.children].forEach(el => {
-        if (el.dataset.postId) existingIds.set(el.dataset.postId, el);
-      });
-
-      const newIds = new Set(sorted.map(p => p.__backendId));
-
-      // Remove deleted
-      existingIds.forEach((el, id) => {
-        if (!newIds.has(id)) el.remove();
-      });
-
-      sorted.forEach((post, index) => {
-        const existing = existingIds.get(post.__backendId);
-        if (existing) {
-          // Update in place
-          const likeBtn = existing.querySelector('.like-btn');
-          if (likeBtn) {
-            likeBtn.classList.toggle('liked', !!post.liked);
-            const countEl = likeBtn.querySelector('.like-count');
-            if (countEl) countEl.textContent = post.likes || 0;
-          }
-          const timeEl = existing.querySelector('.time-ago');
-          if (timeEl) timeEl.textContent = timeAgo(post.created_at);
-
-          // Reorder
-          if (container.children[index] !== existing) {
-            container.insertBefore(existing, container.children[index]);
-          }
-        } else {
-          const el = createPostElement(post);
-          if (container.children[index]) {
-            container.insertBefore(el, container.children[index]);
-          } else {
-            container.appendChild(el);
-          }
-        }
-      });
-    }
-
-    function createPostElement(post) {
-      const div = document.createElement('div');
-      div.dataset.postId = post.__backendId;
-      div.className = 'card-glass rounded-2xl overflow-hidden fade-in';
-
-      const initials = (post.username || 'U').slice(0, 2).toUpperCase();
-      const hasImage = post.image_url && post.image_url.startsWith('data:');
-
-      div.innerHTML = `
-        <div class="p-4">
-          <div class="flex items-center justify-between mb-3">
-            <div class="flex items-center gap-3">
-              <div class="avatar-ring">
-                <div class="w-9 h-9 rounded-full bg-gray-800 flex items-center justify-center text-xs font-bold">${initials}</div>
-              </div>
-              <div>
-                <p class="text-sm font-semibold">${escapeHtml(post.username || 'Anônimo')}</p>
-                <p class="text-xs text-gray-500 time-ago">${timeAgo(post.created_at)}</p>
-              </div>
-            </div>
-            <button class="delete-post-btn w-8 h-8 rounded-full hover:bg-white/10 flex items-center justify-center transition" title="Deletar">
-              <i data-lucide="more-horizontal" style="width:16px;height:16px;color:rgba(255,255,255,0.4);"></i>
-            </button>
-          </div>
-          ${post.caption ? `<p class="text-sm mb-3 leading-relaxed">${escapeHtml(post.caption)}</p>` : ''}
-          ${hasImage ? `<img src="${post.image_url}" class="post-image mb-3" alt="Foto do post" loading="lazy" onerror="console.error('Image failed:', this.src); this.style.background='#1a1a2e'; this.alt='Imagem indisponível';">` : ''}
-          <div class="flex items-center gap-4 pt-1">
-            <button class="like-btn flex items-center gap-1.5 text-sm text-gray-400 hover:text-pink-400 transition ${post.liked ? 'liked' : ''}">
-              <i data-lucide="heart" style="width:18px;height:18px;"></i>
-              <span class="like-count">${post.likes || 0}</span>
-            </button>
-            <button class="flex items-center gap-1.5 text-sm text-gray-400 hover:text-blue-400 transition">
-              <i data-lucide="message-circle" style="width:18px;height:18px;"></i>
-              <span>0</span>
-            </button>
-            <button class="flex items-center gap-1.5 text-sm text-gray-400 hover:text-green-400 transition">
-              <i data-lucide="share" style="width:18px;height:18px;"></i>
-            </button>
-          </div>
-        </div>
-      `;
-
-      // Event: Like
-      div.querySelector('.like-btn').addEventListener('click', () => toggleLike(post));
-
-      // Event: Delete
-      div.querySelector('.delete-post-btn').addEventListener('click', () => {
-        pendingDeleteRecord = post;
-        document.getElementById('delete-modal').classList.remove('hidden');
-      });
-
-      lucide.createIcons({ nodes: [div] });
-      return div;
-    }
-
-    function escapeHtml(str) {
-      const d = document.createElement('div');
-      d.textContent = str;
-      return d.innerHTML;
-    }
-
-    // ---- Data SDK ----
+    // ===== DATA SDK =====
     const dataHandler = {
       onDataChanged(data) {
-        allPosts = data;
-        renderFeed(data);
-        if (data.length >= 999) {
-          document.getElementById('limit-banner').classList.remove('hidden');
-        } else {
-          document.getElementById('limit-banner').classList.add('hidden');
+        allData = data;
+        if (data.length > 0) {
+          saveRecord = data[0];
+          currentLevel = saveRecord.current_level || 0;
+          totalAttempts = saveRecord.total_attempts || 0;
+          try {
+            completedSet = new Set(JSON.parse(saveRecord.completed_levels || "[]"));
+          } catch { completedSet = new Set(); }
         }
+        renderStartScreen();
       }
     };
 
-    (async () => {
-      const initResult = await window.dataSdk.init(dataHandler);
-      if (!initResult.isOk) {
-        showToast('Erro ao conectar. Recarregue a página.');
-      }
-    })();
+    async function initDataSdk() {
+      const r = await window.dataSdk.init(dataHandler);
+      if (!r.isOk) console.error("Data SDK init failed");
+    }
+    initDataSdk();
 
-    // Init Lucide
+    async function saveProgress() {
+      const payload = {
+        player_name: "Player",
+        current_level: currentLevel,
+        completed_levels: JSON.stringify([...completedSet]),
+        total_attempts: totalAttempts,
+        best_streak: completedSet.size,
+        last_played: new Date().toISOString()
+      };
+      if (saveRecord) {
+        const updated = { ...saveRecord, ...payload };
+        await window.dataSdk.update(updated);
+      } else {
+        if (allData.length >= 999) { showToast("Limite de dados atingido!"); return; }
+        await window.dataSdk.create(payload);
+      }
+    }
+
+    // ===== UI HELPERS =====
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    function renderStartScreen() {
+      const btns = document.getElementById('startBtns');
+      if (!btns) return;
+      const hasSave = saveRecord && currentLevel > 0;
+      btns.innerHTML = '';
+
+      if (hasSave) {
+        const cont = document.createElement('button');
+        cont.className = 'w-full py-3 rounded-xl text-base font-bold transition-all';
+        cont.style.cssText = `background:linear-gradient(145deg,var(--primary),#00b8d4);border:none;color:#0a0e1a;font-family:'Orbitron',monospace;cursor:pointer;`;
+        cont.textContent = `Continuar · Fase ${currentLevel + 1}`;
+        cont.onclick = () => startGame(currentLevel);
+        btns.appendChild(cont);
+      }
+
+      const newBtn = document.createElement('button');
+      newBtn.className = 'w-full py-3 rounded-xl text-base font-semibold transition-all';
+      newBtn.style.cssText = `background:linear-gradient(145deg,#1e2744,#141a2e);border:2px solid #2a3558;color:var(--text);font-family:'Rajdhani',sans-serif;cursor:pointer;`;
+      newBtn.textContent = hasSave ? 'Novo Jogo' : '🔐 Começar';
+      newBtn.onclick = () => {
+        if (hasSave) {
+          currentLevel = 0;
+          completedSet.clear();
+          totalAttempts = 0;
+          saveProgress();
+        }
+        startGame(0);
+      };
+      btns.appendChild(newBtn);
+
+      if (hasSave) {
+        const info = document.createElement('p');
+        info.className = 'text-center text-xs opacity-40 mt-2';
+        info.textContent = `${completedSet.size}/25 fases · ${totalAttempts} tentativas`;
+        btns.appendChild(info);
+      }
+    }
+
+    // ===== GAME LOGIC =====
+    function startGame(level) {
+      currentLevel = level;
+      attempts = 0;
+      currentInput = [];
+      document.getElementById('startScreen').classList.add('hidden');
+      document.getElementById('gameScreen').classList.remove('hidden');
+      document.getElementById('gameScreen').classList.add('screen-transition');
+      renderGame();
+      lucide.createIcons();
+    }
+
+    function renderGame() {
+      const lv = LEVELS[currentLevel];
+      document.getElementById('levelNum').textContent = currentLevel + 1;
+      document.getElementById('attemptsEl').textContent = attempts;
+      document.getElementById('hintText').textContent = lv.hint;
+      document.getElementById('feedbackArea').innerHTML = '';
+
+      // Level dots
+      const dotsEl = document.getElementById('levelDots');
+      dotsEl.innerHTML = '';
+      for (let i = 0; i < 25; i++) {
+        const d = document.createElement('div');
+        d.className = 'level-dot';
+        if (completedSet.has(i)) d.classList.add('completed');
+        if (i === currentLevel) d.classList.add('current');
+        dotsEl.appendChild(d);
+      }
+
+      // Code slots
+      const slotsEl = document.getElementById('codeSlots');
+      slotsEl.innerHTML = '';
+      for (let i = 0; i < lv.digits; i++) {
+        const s = document.createElement('div');
+        s.className = 'digit-slot';
+        s.id = `slot-${i}`;
+        if (i === 0) s.classList.add('active');
+        slotsEl.appendChild(s);
+      }
+
+      // Number pad
+      const pad = document.getElementById('numPad');
+      pad.innerHTML = '';
+      for (let i = 0; i <= 9; i++) {
+        const b = document.createElement('button');
+        b.className = 'num-btn';
+        b.textContent = i;
+        b.onclick = () => addDigit(i);
+        pad.appendChild(b);
+      }
+
+      // Reset mini vault
+      document.getElementById('miniVault').classList.remove('opening');
+      currentInput = [];
+    }
+
+    function addDigit(d) {
+      const lv = LEVELS[currentLevel];
+      if (currentInput.length >= lv.digits) return;
+      currentInput.push(d);
+      const idx = currentInput.length - 1;
+      const slot = document.getElementById(`slot-${idx}`);
+      if (slot) {
+        slot.textContent = d;
+        slot.classList.remove('active');
+        slot.style.transform = 'scale(1.1)';
+        setTimeout(() => slot.style.transform = 'scale(1)', 150);
+      }
+      const next = document.getElementById(`slot-${idx + 1}`);
+      if (next) next.classList.add('active');
+    }
+
+    function clearInput() {
+      const lv = LEVELS[currentLevel];
+      currentInput = [];
+      for (let i = 0; i < lv.digits; i++) {
+        const s = document.getElementById(`slot-${i}`);
+        if (s) {
+          s.textContent = '';
+          s.className = 'digit-slot';
+          if (i === 0) s.classList.add('active');
+        }
+      }
+      document.getElementById('feedbackArea').innerHTML = '';
+    }
+
+    function submitGuess() {
+      const lv = LEVELS[currentLevel];
+      if (currentInput.length < lv.digits) {
+        showToast("Complete todos os dígitos!");
+        return;
+      }
+
+      attempts++;
+      totalAttempts++;
+      document.getElementById('attemptsEl').textContent = attempts;
+
+      const guess = currentInput.join('');
+      const target = lv.code;
+
+      if (guess === target) {
+        // Correct!
+        for (let i = 0; i < lv.digits; i++) {
+          const s = document.getElementById(`slot-${i}`);
+          setTimeout(() => s.classList.add('correct'), i * 100);
+        }
+        document.getElementById('miniVault').classList.add('opening');
+        completedSet.add(currentLevel);
+        saveProgress();
+
+        setTimeout(() => {
+          if (currentLevel === 24) {
+            showFinalWin();
+          } else {
+            showSuccess();
+          }
+        }, 800);
+        return;
+      }
+
+      // Show feedback per digit
+      const targetArr = target.split('');
+      const guessArr = guess.split('');
+      const targetCount = {};
+      targetArr.forEach(c => targetCount[c] = (targetCount[c] || 0) + 1);
+
+      const result = new Array(lv.digits).fill('wrong');
+
+      // First pass: exact matches
+      for (let i = 0; i < lv.digits; i++) {
+        if (guessArr[i] === targetArr[i]) {
+          result[i] = 'correct';
+          targetCount[guessArr[i]]--;
+        }
+      }
+      // Second pass: wrong position
+      for (let i = 0; i < lv.digits; i++) {
+        if (result[i] !== 'correct' && targetCount[guessArr[i]] > 0) {
+          result[i] = 'hint-pos';
+          targetCount[guessArr[i]]--;
+        }
+      }
+
+      for (let i = 0; i < lv.digits; i++) {
+        const s = document.getElementById(`slot-${i}`);
+        setTimeout(() => {
+          s.className = 'digit-slot ' + result[i];
+        }, i * 100);
+      }
+
+      const correctCount = result.filter(r => r === 'correct').length;
+      const hintCount = result.filter(r => r === 'hint-pos').length;
+      const fb = document.getElementById('feedbackArea');
+      setTimeout(() => {
+        fb.innerHTML = `<span style="color:#00e676;">●${correctCount}</span> <span style="color:#ffab00;">●${hintCount}</span> <span style="color:#ff1744;">●${lv.digits - correctCount - hintCount}</span>`;
+      }, lv.digits * 100 + 100);
+
+      // Auto clear after delay
+      setTimeout(() => {
+        clearInput();
+      }, 1800);
+    }
+
+    function showSuccess() {
+      const ov = document.getElementById('successOverlay');
+      document.getElementById('successMsg').textContent = `Resolvido em ${attempts} tentativa${attempts > 1 ? 's' : ''}!`;
+      if (currentLevel < 24) {
+        document.getElementById('nextLevelBtn').textContent = `Fase ${currentLevel + 2} →`;
+      }
+      ov.classList.add('show');
+    }
+
+    function showFinalWin() {
+      const ov = document.getElementById('finalOverlay');
+      document.getElementById('finalStats').textContent = `Total de tentativas: ${totalAttempts}`;
+      ov.classList.add('show');
+    }
+
+    function nextLevel() {
+      document.getElementById('successOverlay').classList.remove('show');
+      currentLevel++;
+      attempts = 0;
+      currentInput = [];
+      saveProgress();
+      renderGame();
+    }
+
+    function goBack() {
+      document.getElementById('gameScreen').classList.add('hidden');
+      document.getElementById('startScreen').classList.remove('hidden');
+      saveProgress();
+      renderStartScreen();
+    }
+
+    function resetGame() {
+      document.getElementById('finalOverlay').classList.remove('show');
+      currentLevel = 0;
+      completedSet.clear();
+      totalAttempts = 0;
+      attempts = 0;
+      saveProgress();
+      document.getElementById('gameScreen').classList.add('hidden');
+      document.getElementById('startScreen').classList.remove('hidden');
+      renderStartScreen();
+    }
+
+    // ===== EVENT LISTENERS =====
+    document.getElementById('clearBtn').onclick = clearInput;
+    document.getElementById('submitBtn').onclick = submitGuess;
+    document.getElementById('nextLevelBtn').onclick = nextLevel;
+    document.getElementById('backBtn').onclick = goBack;
+    document.getElementById('replayBtn').onclick = resetGame;
+
+    // Keyboard support
+    document.addEventListener('keydown', (e) => {
+      if (document.getElementById('gameScreen').classList.contains('hidden')) return;
+      if (e.key >= '0' && e.key <= '9') addDigit(parseInt(e.key));
+      if (e.key === 'Enter') submitGuess();
+      if (e.key === 'Backspace') {
+        if (currentInput.length > 0) {
+          const idx = currentInput.length - 1;
+          currentInput.pop();
+          const s = document.getElementById(`slot-${idx}`);
+          if (s) { s.textContent = ''; s.className = 'digit-slot active'; }
+          const prev = document.getElementById(`slot-${idx + 1}`);
+          if (prev) prev.classList.remove('active');
+        }
+      }
+    });
+
+    // Init
     lucide.createIcons();
+    renderStartScreen();
   </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9dddcb96c4b1cb1d',t:'MTc3Mzc2OTM1OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9dddd0fbc6f4cb1d',t:'MTc3Mzc2OTU3OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
