@@ -1,511 +1,340 @@
 <!DOCTYPE html>
-<html lang="pt">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>ENIGMA DO COFRE · 25 níveis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SITRUS | O Verdadeiro Sabor Cítrico</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800;900&display=swap" rel="stylesheet">
+    
     <style>
+        /* =========================================
+           ESTILOS GERAIS E VARIÁVEIS
+           ========================================= */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        :root {
+            --cor-principal: #FF6600; 
+            --cor-texto-claro: #FFFFFF;
+            --cor-texto-escuro: #1A1A1A;
+            --cor-fundo-claro: #F9F9F9;
         }
 
         body {
-            min-height: 100vh;
-            background: #000000;
+            background-color: var(--cor-principal);
+            overflow-x: hidden;
+        }
+
+        /* =========================================
+           CABEÇALHO (100% Centralizado)
+           ========================================= */
+        header {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
-            padding: 12px;
-            transition: background 0.3s ease;
+            justify-content: center;
+            padding: 40px 5vw;
+            background-color: var(--cor-principal);
+            color: var(--cor-texto-claro);
+            gap: 25px;
         }
 
-        /* painel principal — minimalista preto e branco */
-        .cofre {
-            background: #111111;
-            border: 3px solid #ffffff;
-            box-shadow: 0 0 0 2px #000000, 0 0 0 5px #ffffff;
-            padding: 1.8rem 1.2rem;
-            width: 100%;
-            max-width: 560px;
-            border-radius: 4px;
-            text-align: center;
-            color: #ffffff;
-            transition: all 0.2s;
+        .logo {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: -1px;
         }
 
-        /* animação de tremer (quando erro) */
-        .cofre.shake {
-            animation: tremer 0.3s ease-in-out;
-        }
-
-        @keyframes tremer {
-            0% { transform: translateX(0); }
-            20% { transform: translateX(-8px); }
-            40% { transform: translateX(8px); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(4px); }
-            100% { transform: translateX(0); }
-        }
-
-        /* piscar suave para acerto */
-        .cofre.blink-success {
-            animation: brilho 0.4s 2;
-        }
-
-        @keyframes brilho {
-            0% { border-color: #ffffff; box-shadow: 0 0 0 2px #000, 0 0 0 5px #fff; }
-            50% { border-color: #ffffff; box-shadow: 0 0 0 2px #000, 0 0 0 10px #fff; background: #333; }
-            100% { border-color: #ffffff; box-shadow: 0 0 0 2px #000, 0 0 0 5px #fff; }
-        }
-
-        .titulo {
-            font-size: clamp(1.8rem, 8vw, 2.4rem);
-            letter-spacing: 4px;
-            font-weight: 700;
-            text-transform: uppercase;
-            border-bottom: 2px solid #fff;
-            padding-bottom: 0.5rem;
-            margin-bottom: 1.2rem;
-            word-break: break-word;
-        }
-
-        .nivel-display {
-            font-size: clamp(1.2rem, 5vw, 1.5rem);
-            margin: 0.3rem 0 1rem 0;
-            background: #000;
-            padding: 0.4rem 0.8rem;
-            border: 1px dashed #fff;
-            display: inline-block;
-        }
-
-        .senha-container {
-            background: #000000;
-            padding: 1.5rem 0.8rem;
-            border: 2px solid #ffffff;
-            margin: 1.2rem 0;
-            border-radius: 0;
-        }
-
-        .dica-senha {
-            font-size: clamp(2.2rem, 12vw, 3.2rem);
-            font-weight: bold;
-            letter-spacing: 8px;
-            text-transform: uppercase;
-            word-break: break-all;
-            line-height: 1.3;
-            color: #fff;
-            text-shadow: 0 0 5px #fff;
-            animation: respiro 2s infinite alternate;
-        }
-
-        @keyframes respiro {
-            from { opacity: 0.9; text-shadow: 0 0 2px #fff; }
-            to { opacity: 1; text-shadow: 0 0 12px #fff; }
-        }
-
-        .entrada-area {
+        nav {
             display: flex;
+            gap: 25px;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 0.8rem;
-            margin: 1.8rem 0 1rem;
         }
 
-        input {
-            background: #000000;
-            border: 2px solid #ffffff;
-            color: #ffffff;
-            font-size: clamp(1.8rem, 8vw, 2.2rem);
-            width: min(200px, 70%);
-            text-align: center;
-            padding: 0.6rem 0.2rem;
-            font-weight: bold;
-            letter-spacing: 4px;
-            text-transform: uppercase;
-            outline: none;
-            transition: 0.1s;
-            border-radius: 0;
-        }
-
-        input:focus {
-            border-color: #fff;
-            background: #1a1a1a;
-        }
-
-        /* botões preto e branco - responsivos */
-        button {
-            background: #000000;
-            border: 2px solid #ffffff;
-            color: white;
-            font-size: clamp(1.1rem, 4vw, 1.3rem);
+        nav a {
+            color: var(--cor-texto-claro);
+            text-decoration: none;
             font-weight: 600;
-            padding: 0.7rem 1rem;
+            font-size: 16px;
+            text-transform: uppercase;
+            transition: opacity 0.3s;
+        }
+
+        nav a:hover {
+            opacity: 0.7;
+        }
+
+        .btn-comprar {
+            font-weight: 800;
+            font-size: 16px;
             cursor: pointer;
-            transition: 0.1s;
-            letter-spacing: 1px;
-            border-radius: 0;
-            min-width: 110px;
-            flex: 1 1 auto;
-            touch-action: manipulation;
+            background-color: var(--cor-texto-escuro);
+            color: var(--cor-texto-claro);
+            padding: 12px 30px;
+            border-radius: 50px;
+            text-transform: uppercase;
+            border: none;
+            transition: transform 0.2s;
         }
 
-        button:hover {
-            background: #ffffff;
-            color: black;
-            border-color: black;
+        .btn-comprar:hover {
+            transform: scale(1.05);
         }
 
-        /* mobile: ajuste fino */
-        @media (max-width: 480px) {
-            button {
-                padding: 0.8rem 0.5rem;
-                min-width: 90px;
-                font-size: 1rem;
-            }
-            
-            .controles {
-                gap: 0.5rem;
-            }
-        }
-
-        .controles {
+        /* =========================================
+           SEÇÃO 1: HERO
+           ========================================= */
+        .hero {
             display: flex;
-            flex-wrap: wrap;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 0.8rem;
-            margin: 1rem 0;
+            text-align: center;
+            padding: 80px 5vw 120px 5vw;
+            color: var(--cor-texto-claro);
         }
 
-        .mensagem {
-            min-height: 3rem;
-            font-size: clamp(1rem, 4vw, 1.2rem);
-            background: #000;
-            border: 1px solid #fff;
-            padding: 0.8rem 0.5rem;
-            margin: 1.2rem 0 0.2rem;
-            font-weight: bold;
-            transition: 0.2s;
-            word-break: break-word;
+        .hero-texto {
+            max-width: 900px;
         }
 
-        .simbolo-cofre {
-            font-size: clamp(2.2rem, 8vw, 3rem);
-            line-height: 1;
-            margin-bottom: 0.2rem;
-            filter: invert(1) grayscale(1);
+        .hero-texto h1 {
+            font-size: 5rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+        }
+
+        .hero-texto p {
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+        }
+
+        .disclaimer {
+            font-size: 0.9rem;
             opacity: 0.9;
+            margin-top: 40px;
+            font-weight: 400;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
-        hr {
-            border: 0.5px solid #fff;
-            margin: 1rem 0;
+        /* =========================================
+           SEÇÃO 2: CAMPANHA
+           ========================================= */
+        .campanha {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background-color: var(--cor-fundo-claro);
+            color: var(--cor-texto-escuro);
+            padding: 120px 5vw;
         }
 
-        .progresso {
-            font-size: clamp(0.9rem, 4vw, 1.1rem);
-            background: #000;
-            padding: 0.4rem;
-            border: 1px solid #fff;
+        .campanha-texto {
+            max-width: 800px;
         }
 
-        .dica-nivel {
-            font-style: italic;
-            background: #000;
+        .campanha-texto h2 {
+            font-size: 4rem;
+            font-weight: 900;
+            line-height: 1.1;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+        }
+
+        .campanha-texto p.descricao {
+            font-size: 1.3rem;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        .btn-assistir {
+            background-color: #FFB300;
+            color: var(--cor-texto-escuro);
+            padding: 18px 50px;
+            font-size: 1.2rem;
+            font-weight: 800;
             border: none;
-            border-top: 1px dashed #fff;
-            border-bottom: 1px dashed #fff;
-            padding: 0.7rem 0.3rem;
-            margin: 1rem 0;
-            color: #ccc;
-            font-size: clamp(0.95rem, 4vw, 1.1rem);
-            word-break: break-word;
+            cursor: pointer;
+            text-transform: uppercase;
+            border-radius: 50px;
+            transition: transform 0.2s;
         }
 
-        /* botão desabilitado */
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            pointer-events: none;
-            border-color: #666;
-            color: #666;
+        .btn-assistir:hover {
+            transform: scale(1.05);
         }
 
-        /* footer de toque */
-        .footer-touch {
-            margin-top: 1rem;
-            font-size: 0.8rem;
-            color: #555;
-            border-top: 1px solid #333;
-            padding-top: 0.5rem;
+        /* =========================================
+           SEÇÃO 3: SABORES
+           ========================================= */
+        .sabores {
+            background-color: var(--cor-texto-escuro);
+            color: var(--cor-texto-claro);
+            padding: 120px 5vw;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .sabores h2 {
+            font-size: 4rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .sabores > p {
+            font-size: 1.4rem;
+            color: #AAAAAA;
+            margin-bottom: 80px;
+        }
+
+        .grid-sabores {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        .card-sabor {
+            background-color: #262626;
+            padding: 50px 30px;
+            border-radius: 15px;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            border-top: 8px solid; /* Linha de cor para diferenciar cada sabor */
+        }
+
+        .card-sabor:hover {
+            transform: translateY(-10px);
+        }
+
+        .sabor-laranja { border-color: #FF6600; }
+        .sabor-limao { border-color: #FFD500; }
+        .sabor-toranja { border-color: #FF3366; }
+
+        .card-sabor h3 {
+            font-size: 2.2rem;
+            font-weight: 900;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+
+        .card-sabor p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #CCCCCC;
+        }
+
+        /* =========================================
+           RESPONSIVIDADE (MOBILE)
+           ========================================= */
+        @media (max-width: 850px) {
+            
+            .hero-texto h1 {
+                font-size: 3.2rem;
+            }
+
+            .hero-texto p {
+                font-size: 1.4rem;
+            }
+
+            .campanha-texto h2 {
+                font-size: 2.8rem;
+            }
+
+            .campanha-texto p.descricao {
+                font-size: 1.1rem;
+            }
+
+            .sabores h2 {
+                font-size: 3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero-texto h1 {
+                font-size: 2.5rem;
+            }
+            .campanha-texto h2 {
+                font-size: 2.2rem;
+            }
+            .btn-assistir {
+                width: 100%;
+                padding: 15px 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="cofre" id="cofre">
-        <div class="simbolo-cofre">◯ ⚬ ◯</div>
-        <div class="titulo">COFRE EBÔN</div>
-        <div class="nivel-display" id="nivelDisplay">NÍVEL 1 / 25</div>
 
-        <!-- senha oculta (mascarada) -->
-        <div class="senha-container">
-            <div class="dica-senha" id="senhaOculta">????</div>
+    <header>
+        <div class="logo">FRUPICAL</div>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#sabores">Sabores</a>
+            <a href="#">Sobre</a>
+            <a href="#">Campanhas</a>
+            <a href="#">Onde Comprar</a>
+        </nav>
+        <button class="btn-comprar">COMPRAR</button>
+    </header>
+
+    <section class="hero">
+        <div class="hero-texto">
+            <h1>A EXPLOSÃO DO CÍTRICO. 0% DE ENROLAÇÃO.*</h1>
+            <p>E aí, já sentiu o sabor da fruta hoje?</p>
+            <p class="disclaimer">*Feito com suco de verdade e 50% menos açúcares que a média do mercado de refrigerantes tradicionais.</p>
         </div>
+    </section>
 
-        <!-- dica do nível atual -->
-        <div class="dica-nivel" id="dicaNivel">— · dica do enigma · —</div>
-
-        <!-- entrada do jogador -->
-        <div class="entrada-area">
-            <input type="text" id="inputSenha" maxlength="4" placeholder="____" autocomplete="off" inputmode="text">
+    <section class="campanha">
+        <div class="campanha-texto">
+            <h2>FRUPICAL TEM MAIS SUCO REAL E MENOS PROMESSAS VAZIAS</h2>
+            <p class="descricao">Tem refrigerante que é cheio de xarope artificial, ou cheio de marketing, ou cheio dos dois. Todo mundo tá de saco cheio disso. Por isso a Frupical foca no que importa: o frescor do cítrico de verdade.</p>
+            <button class="btn-assistir">Nossa Verdade</button>
+            <p class="disclaimer" style="margin-top: 30px;">*Comparado aos refrigerantes líderes da categoria sabor laranja e limão.</p>
         </div>
+    </section>
 
-        <!-- botões principais -->
-        <div class="controles">
-            <button id="verificarBtn">ABRIR</button>
-            <button id="proximoBtn" disabled>› PROX</button>
+    <section class="sabores" id="sabores">
+        <h2>SABORES REAIS.</h2>
+        <p>Escolha o seu nível de refrescância.</p>
+
+        <div class="grid-sabores">
+            <div class="card-sabor sabor-laranja">
+                <h3>Laranja Raiz</h3>
+                <p>O clássico repensado. Gosto de laranja espremida de verdade, não de laboratório. Feito para matar a sede com vontade.</p>
+            </div>
+
+            <div class="card-sabor sabor-limao">
+                <h3>Limão Siciliano</h3>
+                <p>Azedinho, refrescante e direto ao ponto. Aquele toque cítrico sofisticado pra quem tem atitude e foge do óbvio.</p>
+            </div>
+
+            <div class="card-sabor sabor-toranja">
+                <h3>Toranja Sanguínea</h3>
+                <p>Um amargor cítrico na medida certa misturado com uma doçura equilibrada. Você não encontra isso em qualquer esquina.</p>
+            </div>
         </div>
+    </section>
 
-        <!-- mensagem de feedback -->
-        <div class="mensagem" id="mensagem"></div>
-
-        <!-- progresso e botão de reiniciar -->
-        <hr>
-        <div class="progresso" id="progressoTexto"></div>
-        <div class="controles" style="margin-top: 0.8rem;">
-            <button id="reiniciarBtn">↻ REINICIAR</button>
-        </div>
-        <div class="footer-touch">toque · enigma 25 níveis</div>
-    </div>
-
-    <script>
-        (function() {
-            // ---------- BASE DE DADOS DOS 25 NÍVEIS (senha + dica) ----------
-            const niveis = [
-                { senha: '0000', dica: 'quatro zeros' },
-                { senha: '1234', dica: 'sequência clássica' },
-                { senha: '2580', dica: 'meio do teclado' },
-                { senha: '1111', dica: 'repete 1' },
-                { senha: '3141', dica: 'pi sem o 5?' },
-                { senha: '1610', dica: 'dia da consciência' },
-                { senha: '2001', dica: 'odisseia no espaço' },
-                { senha: '7777', dica: 'sorte grande' },
-                { senha: '0825', dica: 'agosto, dia 25' },
-                { senha: '9999', dica: 'máximo' },
-                { senha: '1357', dica: 'ímpares' },
-                { senha: '2468', dica: 'pares' },
-                { senha: '1212', dica: 'natal? quase' },
-                { senha: '2304', dica: 'dia de são jorge' },
-                { senha: '3003', dica: 'palíndromo' },
-                { senha: '4512', dica: 'aleatório' },
-                { senha: '6789', dica: 'trás pra frente' },
-                { senha: '9876', dica: 'decrescente' },
-                { senha: '5566', dica: 'dobradinha' },
-                { senha: '4321', dica: 'trás da sequência' },
-                { senha: '0010', dica: 'binário 2' },
-                { senha: '2024', dica: 'ano atual (quando foi feito)' },
-                { senha: '1313', dica: 'treze treze' },
-                { senha: '2712', dica: 'natal? véspera' },
-                { senha: '4242', dica: 'resposta? não' } // 25º nível
-            ];
-
-            // ----- elementos DOM -----
-            const cofreEl = document.getElementById('cofre');
-            const nivelDisplay = document.getElementById('nivelDisplay');
-            const senhaOculta = document.getElementById('senhaOculta');
-            const dicaNivel = document.getElementById('dicaNivel');
-            const inputSenha = document.getElementById('inputSenha');
-            const mensagemEl = document.getElementById('mensagem');
-            const progressoTexto = document.getElementById('progressoTexto');
-            const verificarBtn = document.getElementById('verificarBtn');
-            const proximoBtn = document.getElementById('proximoBtn');
-            const reiniciarBtn = document.getElementById('reiniciarBtn');
-
-            // ----- estado do jogo -----
-            let nivelAtual = 0;               // 0-based (0 = nível 1)
-            let nivelCompleto = false;         // se acertou a senha deste nível
-
-            // ----- funções auxiliares -----
-            function atualizarInterface() {
-                // nível (exibição amigável 1-25)
-                nivelDisplay.textContent = `NÍVEL ${nivelAtual + 1} / 25`;
-
-                // atualiza dica do nível
-                dicaNivel.textContent = '🔒 ' + niveis[nivelAtual].dica;
-
-                // ocultar senha com '?' se não foi resolvido, senão mostra a senha
-                if (nivelCompleto) {
-                    senhaOculta.textContent = niveis[nivelAtual].senha;
-                } else {
-                    senhaOculta.textContent = '????';
-                }
-
-                // limpar campo e remover animações
-                inputSenha.value = '';
-                inputSenha.focus({ preventScroll: true });  // tenta focar (celular abre teclado)
-                
-                // habilitar/desabilitar botão próximo
-                if (nivelCompleto && nivelAtual < 24) {
-                    proximoBtn.disabled = false;
-                } else {
-                    proximoBtn.disabled = true;
-                }
-
-                // se nível 25 completo, mensagem especial
-                if (nivelAtual === 24 && nivelCompleto) {
-                    mensagemEl.textContent = '🎉 PARABÉNS! Você abriu o cofre final!';
-                    proximoBtn.disabled = true; // não tem próximo
-                } else if (nivelCompleto) {
-                    mensagemEl.textContent = '✅ Senha correta! Siga ao próximo.';
-                } else {
-                    mensagemEl.textContent = '⚫ Digite a senha de 4 dígitos';
-                }
-
-                // atualiza progresso
-                progressoTexto.textContent = `níveis desbloqueados: ${nivelAtual + (nivelCompleto ? 1 : 0)}/25 · ${Math.floor((nivelAtual + (nivelCompleto ? 1 : 0)) / 25 * 100)}%`;
-            }
-
-            // animação de erro (shake)
-            function animarErro() {
-                cofreEl.classList.add('shake');
-                setTimeout(() => {
-                    cofreEl.classList.remove('shake');
-                }, 300);
-            }
-
-            // animação de acerto (piscar)
-            function animarAcerto() {
-                cofreEl.classList.add('blink-success');
-                setTimeout(() => {
-                    cofreEl.classList.remove('blink-success');
-                }, 600);
-            }
-
-            // função chamada ao acertar a senha
-            function resolverNivel() {
-                if (nivelCompleto) return; // já resolvido
-
-                nivelCompleto = true;
-                animarAcerto();
-                atualizarInterface();
-                mensagemEl.textContent = '✔ Cofre aberto!';
-
-                // feedback especial se for último nível
-                if (nivelAtual === 24) {
-                    mensagemEl.textContent = '🏆 VOCÊ VENCEU! Todos os 25 níveis.';
-                }
-            }
-
-            // verificar senha digitada
-            function verificarSenha() {
-                if (nivelCompleto) {
-                    mensagemEl.textContent = '⏳ Nível já concluído. Avance.';
-                    return;
-                }
-
-                let tentativa = inputSenha.value.trim().toUpperCase(); // mas senhas são números
-                // remove qualquer caractere não numérico
-                tentativa = tentativa.replace(/\D/g, '');
-
-                if (tentativa.length !== 4) {
-                    mensagemEl.textContent = '⚠ Digite exatamente 4 dígitos.';
-                    animarErro();
-                    return;
-                }
-
-                const senhaCorreta = niveis[nivelAtual].senha;
-
-                if (tentativa === senhaCorreta) {
-                    resolverNivel();
-                } else {
-                    mensagemEl.textContent = '✘ Senha incorreta. Tente de novo.';
-                    animarErro();
-                    inputSenha.value = '';
-                    inputSenha.focus({ preventScroll: true });
-                }
-            }
-
-            // avançar para o próximo nível
-            function proximoNivel() {
-                if (!nivelCompleto) {
-                    mensagemEl.textContent = '▪ Primeiro abra o cofre atual.';
-                    return;
-                }
-
-                if (nivelAtual < 24) {
-                    nivelAtual++;
-                    nivelCompleto = false;   // novo nível bloqueado
-                    atualizarInterface();
-                    mensagemEl.textContent = `🔓 Nível ${nivelAtual + 1}`;
-                } else {
-                    // já no último, só se completa uma vez
-                    mensagemEl.textContent = '🎯 Você já concluiu todos!';
-                }
-            }
-
-            // reiniciar progresso (voltar ao nível 1)
-            function reiniciarJogo() {
-                nivelAtual = 0;
-                nivelCompleto = false;
-                atualizarInterface();
-                mensagemEl.textContent = '♻ Jogo reiniciado. Boa sorte!';
-                // remove classes de animação
-                cofreEl.classList.remove('shake', 'blink-success');
-                inputSenha.focus({ preventScroll: true });
-            }
-
-            // ----- event listeners -----
-            verificarBtn.addEventListener('click', verificarSenha);
-
-            proximoBtn.addEventListener('click', proximoNivel);
-
-            reiniciarBtn.addEventListener('click', reiniciarJogo);
-
-            // permitir tecla Enter no campo de texto
-            inputSenha.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    verificarSenha();
-                }
-            });
-
-            // mobile: garantir que entrada seja numérica mas permitir letras (já tratamos)
-            inputSenha.addEventListener('input', (e) => {
-                // opcional: filtrar só números, mas vou deixar livre, pois o .replace no verificar resolve
-                // apenas para não encher de caracteres estranhos podemos sugerir:
-                let val = e.target.value.replace(/[^0-9]/g, '');
-                if (val.length > 4) val = val.slice(0,4);
-                e.target.value = val;
-            });
-
-            // também ao colar, limpar
-            inputSenha.addEventListener('paste', (e) => {
-                e.preventDefault();
-                let colado = (e.clipboardData || window.clipboardData).getData('text');
-                colado = colado.replace(/\D/g, '').slice(0,4);
-                inputSenha.value = colado;
-            });
-
-            // inicialização
-            function init() {
-                nivelAtual = 0;
-                nivelCompleto = false;
-                atualizarInterface();
-                mensagemEl.textContent = '⚫ Digite a senha de 4 dígitos';
-                inputSenha.focus({ preventScroll: true }); // tenta focar no celular
-            }
-
-            init();
-
-            // pequeno ajuste para evitar zoom no duplo toque (opcional)
-            document.addEventListener('touchstart', (e) => {
-                // apenas para permitir toques sem zoom exagerado
-            }, { passive: true });
-
-        })();
-    </script>
 </body>
 </html>
