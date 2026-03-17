@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Finx</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&amp;family=DM+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; font-family: 'DM Sans', sans-serif; }
+
+    .finx-bg { background: #ffffff; }
+    .card { background: #ffffff; border: 1px solid #e5e5e5; }
+    .card:hover { border-color: #d0d0d0; }
+    .btn-primary { background: #000000; color: #ffffff; transition: all 0.2s; }
+    .btn-primary:hover { background: #1a1a1a; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-secondary { background: #f5f5f5; color: #000000; border: 1px solid #e5e5e5; transition: all 0.2s; }
+    .btn-secondary:hover { background: #efefef; }
+
+    .post-image { width: 100%; height: auto; object-fit: cover; border-radius: 8px; }
+
+    .like-btn { transition: all 0.2s; }
+    .like-btn:hover { color: #000000; }
+    .like-btn.liked svg { fill: #000000; stroke: #000000; }
+
+    .fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    .slide-up { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1); }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(100%); } to { opacity: 1; transform: translateY(0); } }
+
+    .avatar { background: #000000; color: #ffffff; }
+
+    input[type="file"] { display: none; }
+
+    .toast-container { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); z-index: 1000; pointer-events: none; }
+    .toast { background: #000000; color: #ffffff; padding: 12px 20px; border-radius: 8px; font-size: 14px; animation: toastIn 0.3s ease-out, toastOut 0.3s ease-in 2.5s forwards; pointer-events: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+    @keyframes toastIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastOut { from { opacity: 1; } to { opacity: 0; } }
+
+    .empty-state svg { stroke: #d0d0d0; }
+
+    .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+
+    .confirm-card { background: #ffffff; border: 1px solid #e5e5e5; }
+
+    .spinner { border: 2px solid #f0f0f0; border-top: 2px solid #000000; border-radius: 50%; width: 16px; height: 16px; animation: spin 0.8s linear infinite; display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .limit-banner { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d0d0d0; border-radius: 3px; }
+
+    .divider { background: #e5e5e5; }
+
+    /* Mobile responsive */
+    @media (max-width: 640px) {
+      body { font-size: 14px; }
+      .header-title { font-size: 20px; }
+      .post-text { font-size: 14px; }
+      .caption-input { font-size: 14px; padding: 12px; }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full finx-bg text-black overflow-auto">
+   <!-- Toast Container -->
+   <div id="toast-container" class="toast-container"></div><!-- Delete Confirm Modal -->
+   <div id="delete-modal" class="fixed inset-0 z-50 flex items-center justify-center modal-overlay hidden">
+    <div class="confirm-card rounded-lg p-6 mx-4 max-w-sm w-full slide-up shadow-lg">
+     <h3 class="text-lg font-semibold mb-2" style="font-family:'Outfit',sans-serif;">Deletar post?</h3>
+     <p class="text-sm text-gray-600 mb-6">Esta ação não pode ser desfeita.</p>
+     <div class="flex gap-3">
+      <button id="cancel-delete-btn" class="flex-1 py-2.5 rounded-lg btn-secondary text-sm font-medium">Cancelar</button> <button id="confirm-delete-btn" class="flex-1 py-2.5 rounded-lg btn-primary text-sm font-medium">Deletar</button>
+     </div>
+    </div>
+   </div><!-- Header -->
+   <header class="sticky top-0 z-40 px-4 py-4 flex items-center justify-between bg-white border-b divider">
+    <div class="flex items-center gap-2">
+     <h1 id="header-title" class="text-2xl font-bold header-title" style="font-family:'Outfit',sans-serif;letter-spacing:-0.5px;">Finx</h1>
+    </div>
+    <div class="flex items-center gap-3">
+     <button class="w-9 h-9 rounded-full hover:bg-gray-100 transition flex items-center justify-center"> <i data-lucide="bell" style="width:20px;height:20px;color:#000;"></i> </button>
+     <div class="w-9 h-9 rounded-full avatar flex items-center justify-center text-xs font-bold text-white">
+      VC
+     </div>
+    </div>
+   </header><!-- Create Post Section -->
+   <div class="max-w-2xl mx-auto px-4 pt-4 pb-2">
+    <div class="card rounded-lg p-4 border">
+     <div class="flex items-start gap-3 mb-3">
+      <div class="w-10 h-10 rounded-full avatar flex items-center justify-center text-xs font-bold text-white flex-shrink-0">
+       VC
+      </div>
+      <div class="flex-1 min-w-0">
+       <p class="text-sm font-semibold">Você</p>
+       <p id="welcome-text" class="text-xs text-gray-500">O que está rolando?</p>
+      </div>
+     </div><textarea id="caption-input" class="w-full bg-white border border-e5e5e5 rounded-lg px-3 py-2 text-sm text-black placeholder-gray-400 resize-none focus:outline-none focus:ring-1 focus:ring-black transition caption-input" rows="3" placeholder="Escreva uma legenda..."></textarea> <!-- Image Preview -->
+     <div id="image-preview-container" class="hidden mt-3 relative">
+      <img id="image-preview" class="post-image" alt="Preview da foto" loading="lazy"> <button id="remove-image-btn" class="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/80 flex items-center justify-center hover:bg-black transition text-white"> <i data-lucide="x" style="width:16px;height:16px;"></i> </button>
+     </div>
+     <div class="flex items-center justify-between mt-4 gap-2 flex-wrap">
+      <div class="flex gap-2">
+       <label for="photo-input" class="flex items-center gap-2 px-3 py-2 rounded-lg btn-secondary hover:bg-gray-100 transition cursor-pointer text-sm font-medium"> <i data-lucide="image" style="width:18px;height:18px;"></i> Foto </label> <input type="file" id="photo-input" accept="image/*"> <label for="camera-input" class="flex items-center gap-2 px-3 py-2 rounded-lg btn-secondary hover:bg-gray-100 transition cursor-pointer text-sm font-medium"> <i data-lucide="camera" style="width:18px;height:18px;"></i> Câmera </label> <input type="file" id="camera-input" accept="image/*" capture="environment">
+      </div><button id="post-btn" class="btn-primary px-6 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 ml-auto" disabled> <span id="post-btn-text">Postar</span> <span id="post-spinner" class="spinner hidden"></span> </button>
+     </div>
+    </div>
+   </div><!-- Limit Banner -->
+   <div id="limit-banner" class="max-w-2xl mx-auto px-4 mt-2 limit-banner rounded-lg p-3 text-sm text-center hidden">
+    ⚠️ Limite de 999 posts atingido. Delete alguns para continuar.
+   </div><!-- Feed -->
+   <div class="max-w-2xl mx-auto px-4 pt-4 pb-6">
+    <div class="flex items-center justify-between mb-4">
+     <h2 class="text-xs font-semibold text-gray-500 uppercase tracking-wider" style="font-family:'Outfit',sans-serif;">Feed</h2>
+     <div id="post-count" class="text-xs text-gray-400"></div>
+    </div>
+    <div id="feed-container" class="space-y-3">
+     <!-- Posts render here -->
+    </div>
+    <div id="empty-state" class="hidden text-center py-16">
+     <div class="empty-state flex justify-center mb-3">
+      <i data-lucide="image-plus" style="width:56px;height:56px;"></i>
+     </div>
+     <p class="text-gray-800 text-base font-semibold" style="font-family:'Outfit',sans-serif;">Nenhum post ainda</p>
+     <p class="text-gray-500 text-sm mt-1">Comece compartilhando sua primeira foto!</p>
+    </div>
+   </div>
+  </div>
+  <script>
+    // ---- State ----
+    let allPosts = [];
+    let currentImageData = null;
+    let pendingDeleteRecord = null;
+
+    // ---- Default Config ----
+    const defaultConfig = {
+      app_title: 'Finx',
+      welcome_text: 'O que está rolando?',
+      background_color: '#0a0a0a',
+      surface_color: '#1a1a2e',
+      text_color: '#ffffff',
+      primary_action_color: '#e94560',
+      secondary_action_color: '#ff6b81',
+      font_family: 'Outfit',
+      font_size: 16
+    };
+
+    // ---- Element SDK Init ----
+    window.elementSdk.init({
+      defaultConfig,
+      onConfigChange: async (config) => {
+        const c = key => config[key] || defaultConfig[key];
+
+        document.getElementById('header-title').textContent = c('app_title');
+        document.getElementById('welcome-text').textContent = c('welcome_text');
+
+        const font = c('font_family');
+        const baseSize = c('font_size');
+        const baseFontStack = `${font}, 'DM Sans', sans-serif`;
+
+        document.getElementById('header-title').style.fontFamily = baseFontStack;
+        document.getElementById('header-title').style.fontSize = `${baseSize * 1.3}px`;
+
+        const bg = c('background_color');
+        const appEl = document.getElementById('app');
+        appEl.style.background = `linear-gradient(135deg, ${bg} 0%, ${c('surface_color')} 50%, ${adjustColor(bg, 20)} 100%)`;
+        appEl.style.color = c('text_color');
+
+        document.querySelectorAll('.btn-primary').forEach(el => {
+          el.style.background = `linear-gradient(135deg, ${c('primary_action_color')}, ${c('secondary_action_color')})`;
+        });
+        document.querySelectorAll('.avatar-ring').forEach(el => {
+          el.style.background = `linear-gradient(135deg, ${c('primary_action_color')}, ${c('secondary_action_color')})`;
+        });
+      },
+      mapToCapabilities: (config) => {
+        const c = key => config[key] || defaultConfig[key];
+        const make = (key) => ({
+          get: () => c(key),
+          set: (v) => { config[key] = v; window.elementSdk.setConfig({ [key]: v }); }
+        });
+        return {
+          recolorables: [
+            make('background_color'),
+            make('surface_color'),
+            make('text_color'),
+            make('primary_action_color'),
+            make('secondary_action_color')
+          ],
+          borderables: [],
+          fontEditable: make('font_family'),
+          fontSizeable: make('font_size')
+        };
+      },
+      mapToEditPanelValues: (config) => new Map([
+        ['app_title', config.app_title || defaultConfig.app_title],
+        ['welcome_text', config.welcome_text || defaultConfig.welcome_text]
+      ])
+    });
+
+    function adjustColor(hex, amount) {
+      hex = hex.replace('#', '');
+      let r = Math.min(255, parseInt(hex.substring(0,2), 16) + amount);
+      let g = Math.min(255, parseInt(hex.substring(2,4), 16) + amount);
+      let b = Math.min(255, parseInt(hex.substring(4,6), 16) + amount);
+      return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+    }
+
+    // ---- Toast ----
+    function showToast(msg) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = msg;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 3000);
+    }
+
+    // ---- Image Handling ----
+    function handleImageSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      if (file.size > 5 * 1024 * 1024) {
+        showToast('Imagem muito grande (máx 5MB)');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        currentImageData = ev.target.result;
+        const preview = document.getElementById('image-preview');
+        preview.src = currentImageData;
+        document.getElementById('image-preview-container').classList.remove('hidden');
+        updatePostBtn();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    document.getElementById('photo-input').addEventListener('change', handleImageSelect);
+    document.getElementById('camera-input').addEventListener('change', handleImageSelect);
+
+    document.getElementById('remove-image-btn').addEventListener('click', () => {
+      currentImageData = null;
+      document.getElementById('image-preview-container').classList.add('hidden');
+      document.getElementById('photo-input').value = '';
+      document.getElementById('camera-input').value = '';
+      updatePostBtn();
+    });
+
+    // ---- Post Button State ----
+    const captionInput = document.getElementById('caption-input');
+    const postBtn = document.getElementById('post-btn');
+
+    function updatePostBtn() {
+      postBtn.disabled = !currentImageData && !captionInput.value.trim();
+    }
+    captionInput.addEventListener('input', updatePostBtn);
+
+    // ---- Create Post ----
+    postBtn.addEventListener('click', async () => {
+      if (allPosts.length >= 999) {
+        document.getElementById('limit-banner').classList.remove('hidden');
+        return;
+      }
+
+      const caption = captionInput.value.trim();
+      if (!caption && !currentImageData) return;
+
+      postBtn.disabled = true;
+      document.getElementById('post-btn-text').textContent = 'Postando...';
+      document.getElementById('post-spinner').classList.remove('hidden');
+
+      const newPost = {
+        username: 'Você',
+        caption: caption,
+        image_url: currentImageData || '',
+        likes: 0,
+        liked: false,
+        created_at: new Date().toISOString()
+      };
+
+      const result = await window.dataSdk.create(newPost);
+
+      document.getElementById('post-btn-text').textContent = 'Postar';
+      document.getElementById('post-spinner').classList.add('hidden');
+
+      if (result.isOk) {
+        captionInput.value = '';
+        currentImageData = null;
+        document.getElementById('image-preview-container').classList.add('hidden');
+        document.getElementById('photo-input').value = '';
+        document.getElementById('camera-input').value = '';
+        showToast('Post publicado! 🔥');
+      } else {
+        showToast('Erro ao publicar. Tente novamente.');
+      }
+      updatePostBtn();
+    });
+
+    // ---- Delete Modal ----
+    document.getElementById('cancel-delete-btn').addEventListener('click', () => {
+      pendingDeleteRecord = null;
+      document.getElementById('delete-modal').classList.add('hidden');
+    });
+
+    document.getElementById('confirm-delete-btn').addEventListener('click', async () => {
+      if (!pendingDeleteRecord) return;
+      const btn = document.getElementById('confirm-delete-btn');
+      btn.textContent = 'Deletando...';
+      btn.disabled = true;
+
+      const result = await window.dataSdk.delete(pendingDeleteRecord);
+
+      btn.textContent = 'Deletar';
+      btn.disabled = false;
+      document.getElementById('delete-modal').classList.add('hidden');
+
+      if (result.isOk) {
+        showToast('Post deletado');
+      } else {
+        showToast('Erro ao deletar');
+      }
+      pendingDeleteRecord = null;
+    });
+
+    // ---- Like Toggle ----
+    async function toggleLike(record) {
+      const updated = { ...record, liked: !record.liked, likes: record.liked ? Math.max(0, record.likes - 1) : record.likes + 1 };
+      // Optimistic UI
+      const likeBtn = document.querySelector(`[data-post-id="${record.__backendId}"] .like-btn`);
+      if (likeBtn) {
+        likeBtn.classList.toggle('liked', updated.liked);
+        const countEl = likeBtn.querySelector('.like-count');
+        if (countEl) countEl.textContent = updated.likes;
+      }
+      await window.dataSdk.update(updated);
+    }
+
+    // ---- Time Formatting ----
+    function timeAgo(isoStr) {
+      const diff = Date.now() - new Date(isoStr).getTime();
+      const mins = Math.floor(diff / 60000);
+      if (mins < 1) return 'agora';
+      if (mins < 60) return `${mins}min`;
+      const hrs = Math.floor(mins / 60);
+      if (hrs < 24) return `${hrs}h`;
+      const days = Math.floor(hrs / 24);
+      return `${days}d`;
+    }
+
+    // ---- Render Feed ----
+    function renderFeed(posts) {
+      const container = document.getElementById('feed-container');
+      const emptyState = document.getElementById('empty-state');
+      const postCount = document.getElementById('post-count');
+
+      if (posts.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        postCount.textContent = '';
+        return;
+      }
+
+      emptyState.classList.add('hidden');
+      postCount.textContent = `${posts.length} post${posts.length > 1 ? 's' : ''}`;
+
+      // Sort newest first
+      const sorted = [...posts].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      const existingIds = new Map();
+      [...container.children].forEach(el => {
+        if (el.dataset.postId) existingIds.set(el.dataset.postId, el);
+      });
+
+      const newIds = new Set(sorted.map(p => p.__backendId));
+
+      // Remove deleted
+      existingIds.forEach((el, id) => {
+        if (!newIds.has(id)) el.remove();
+      });
+
+      sorted.forEach((post, index) => {
+        const existing = existingIds.get(post.__backendId);
+        if (existing) {
+          // Update in place
+          const likeBtn = existing.querySelector('.like-btn');
+          if (likeBtn) {
+            likeBtn.classList.toggle('liked', !!post.liked);
+            const countEl = likeBtn.querySelector('.like-count');
+            if (countEl) countEl.textContent = post.likes || 0;
+          }
+          const timeEl = existing.querySelector('.time-ago');
+          if (timeEl) timeEl.textContent = timeAgo(post.created_at);
+
+          // Reorder
+          if (container.children[index] !== existing) {
+            container.insertBefore(existing, container.children[index]);
+          }
+        } else {
+          const el = createPostElement(post);
+          if (container.children[index]) {
+            container.insertBefore(el, container.children[index]);
+          } else {
+            container.appendChild(el);
+          }
+        }
+      });
+    }
+
+    function createPostElement(post) {
+      const div = document.createElement('div');
+      div.dataset.postId = post.__backendId;
+      div.className = 'card rounded-lg overflow-hidden fade-in border';
+
+      const initials = (post.username || 'U').slice(0, 2).toUpperCase();
+      const hasImage = post.image_url && post.image_url.startsWith('data:');
+
+      div.innerHTML = `
+        <div class="p-4">
+          <div class="flex items-start justify-between mb-3">
+            <div class="flex items-start gap-3 flex-1">
+              <div class="w-10 h-10 rounded-full avatar flex items-center justify-center text-xs font-bold text-white flex-shrink-0">${initials}</div>
+              <div class="min-w-0">
+                <p class="text-sm font-semibold text-black">${escapeHtml(post.username || 'Anônimo')}</p>
+                <p class="text-xs text-gray-500 time-ago">${timeAgo(post.created_at)}</p>
+              </div>
+            </div>
+            <button class="delete-post-btn w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition flex-shrink-0" title="Deletar">
+              <i data-lucide="more-horizontal" style="width:18px;height:18px;color:#999;"></i>
+            </button>
+          </div>
+          ${post.caption ? `<p class="text-sm text-black mb-3 leading-relaxed post-text">${escapeHtml(post.caption)}</p>` : ''}
+          ${hasImage ? `<img src="${post.image_url}" class="post-image mb-3" alt="Foto do post" loading="lazy" onerror="console.error('Image failed:', this.src); this.style.background='#f5f5f5'; this.alt='Imagem indisponível';">` : ''}
+          <div class="flex items-center gap-4 pt-2 text-sm text-gray-600">
+            <button class="like-btn flex items-center gap-1.5 hover:text-black transition ${post.liked ? 'liked text-black' : ''}">
+              <i data-lucide="heart" style="width:18px;height:18px;"></i>
+              <span class="like-count text-xs">${post.likes || 0}</span>
+            </button>
+            <button class="flex items-center gap-1.5 hover:text-black transition">
+              <i data-lucide="message-circle" style="width:18px;height:18px;"></i>
+              <span class="text-xs">0</span>
+            </button>
+            <button class="flex items-center gap-1.5 hover:text-black transition">
+              <i data-lucide="share" style="width:18px;height:18px;"></i>
+            </button>
+          </div>
+        </div>
+      `;
+
+      // Event: Like
+      div.querySelector('.like-btn').addEventListener('click', () => toggleLike(post));
+
+      // Event: Delete
+      div.querySelector('.delete-post-btn').addEventListener('click', () => {
+        pendingDeleteRecord = post;
+        document.getElementById('delete-modal').classList.remove('hidden');
+      });
+
+      lucide.createIcons({ nodes: [div] });
+      return div;
+    }
+
+    function escapeHtml(str) {
+      const d = document.createElement('div');
+      d.textContent = str;
+      return d.innerHTML;
+    }
+
+    // ---- Data SDK ----
+    const dataHandler = {
+      onDataChanged(data) {
+        allPosts = data;
+        renderFeed(data);
+        if (data.length >= 999) {
+          document.getElementById('limit-banner').classList.remove('hidden');
+        } else {
+          document.getElementById('limit-banner').classList.add('hidden');
+        }
+      }
+    };
+
+    (async () => {
+      const initResult = await window.dataSdk.init(dataHandler);
+      if (!initResult.isOk) {
+        showToast('Erro ao conectar. Recarregue a página.');
+      }
+    })();
+
+    // Init Lucide
+    lucide.createIcons();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9dddb5f9d2c4ca82',t:'MTc3Mzc2ODQ3Mi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
